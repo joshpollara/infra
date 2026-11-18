@@ -1,3 +1,5 @@
+engine:
+  name: stategraph
 # Converted from atlantis.yaml by atlantis-to-stategraph.py 1.0.0.
 # Read the conversion report before you commit this file.
 hooks:
