@@ -1,0 +1,28 @@
+version: 3
+automerge: true
+projects:
+- name: network
+  dir: network
+  autoplan:
+    when_modified: ["*.tf"]
+- name: payments-staging
+  dir: apps/payments/staging
+  workflow: payments
+  autoplan:
+    when_modified: ["*.tf", "../../../modules/**/*.tf"]
+- name: payments-prod
+  dir: apps/payments/prod
+  workflow: payments
+  apply_requirements: [approved, mergeable]
+  depends_on: [network]
+  autoplan:
+    when_modified: ["*.tf", "../../../modules/**/*.tf"]
+workflows:
+  payments:
+    plan:
+      steps:
+      - init
+      - plan
+    apply:
+      steps:
+      - apply
