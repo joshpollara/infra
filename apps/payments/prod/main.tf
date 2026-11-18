@@ -5,7 +5,7 @@ module "payments" {
 }
 
 resource "terraform_data" "events_queue" {
-  input = { name = "payments-events", retention_hours = 72 }
+  input = { name = "payments-events", retention_hours = 96 }
 }
 
 resource "terraform_data" "status_assets" {
