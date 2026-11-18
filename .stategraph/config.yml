@@ -1,0 +1,81 @@
+# Converted from atlantis.yaml by atlantis-to-stategraph.py 1.0.0.
+# Read the conversion report before you commit this file.
+hooks:
+  all:
+    pre:
+    - type: run
+      cmd: [sh, -c, terraform fmt -check -recursive]
+      ignore_errors: true
+when_modified:
+  file_patterns: []
+  autoplan_draft_pr: false
+dirs:
+  apps/payments/prod:
+    workspaces:
+      default:
+        tags: [payments-prod, workflow-payments]
+        when_modified:
+          file_patterns: [apps/payments/prod/*.tf, modules/**/*.tf]
+          depends_on:
+            tag_query: network
+            prune_on_no_change: true
+  apps/payments/staging:
+    workspaces:
+      default:
+        tags: [payments-staging, workflow-payments]
+        when_modified:
+          file_patterns: [apps/payments/staging/*.tf, modules/**/*.tf]
+  network:
+    workspaces:
+      default:
+        tags: [network, workflow-default]
+        when_modified:
+          file_patterns: [network/*.tf]
+workflows:
+- tag_query: workflow-default
+  plan:
+  - type: init
+  - type: plan
+  - type: env
+    name: CONFTEST_POLICY
+    cmd: [printf, '%s', $TERRATEAM_ROOT/policies/no-public-buckets]
+  - type: conftest
+    gate:
+      token: no-public-buckets
+      name: no-public-buckets
+      any_of: ['user:bender2352']
+      any_of_count: 1
+- tag_query: workflow-payments
+  plan:
+  - type: init
+  - type: plan
+  - type: env
+    name: CONFTEST_POLICY
+    cmd: [printf, '%s', $TERRATEAM_ROOT/policies/no-public-buckets]
+  - type: conftest
+    gate:
+      token: no-public-buckets
+      name: no-public-buckets
+      any_of: ['user:bender2352']
+      any_of_count: 1
+apply_requirements:
+  checks:
+  - tag_query: payments-prod
+    approved:
+      enabled: true
+      any_of: ['*']
+      any_of_count: 1
+    require_ready_for_review_pr: false
+  - tag_query: ''
+    approved:
+      enabled: true
+      any_of: ['*']
+      any_of_count: 1
+    merge_conflicts:
+      enabled: false
+    status_checks:
+      enabled: false
+    require_ready_for_review_pr: false
+automerge:
+  enabled: true
+  merge_strategy: merge
